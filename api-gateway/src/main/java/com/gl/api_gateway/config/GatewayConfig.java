@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
-// You need this new import for the LoadBalancer filter
 import static org.springframework.cloud.gateway.server.mvc.filter.LoadBalancerFilterFunctions.lb;
 import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
 import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
@@ -21,16 +20,29 @@ public class GatewayConfig {
     @Bean
     public RouterFunction<ServerResponse> gatewayRoutes() {
         return route("auth-service")
-                // 1. Auth route: Empty http() method + lb() filter
                 .route(req -> req.path().startsWith("/api/v1/auth"), http())
                 .filter(lb("AUTH-SERVICE"))
                 .build()
 
                 .and(route("pricing-service")
-                        // 2. Pricing route: Empty http() + lb() filter + your JWT filter
                         .route(req -> req.path().startsWith("/api/v1/pricing") || req.path().startsWith("/api/v1/designs"), http())
                         .filter(lb("PRICING-SERVICE"))
-                        .filter(jwtFilter.applyFilter()) // Attach custom JWT validation
+                        .filter(jwtFilter.applyFilter())
+                        .build())
+
+                // --- NEW ROUTES FOR PRODUCT SERVICE ---
+
+                // 1. PUBLIC Route: No JWT filter applied
+                .and(route("product-service-public")
+                        .route(req -> req.path().startsWith("/api/products"), http())
+                        .filter(lb("PRODUCT-SERVICE"))
+                        .build())
+
+                // 2. ADMIN Route: strict applyAdminFilter() applied
+                .and(route("product-service-admin")
+                        .route(req -> req.path().startsWith("/api/admin/products"), http())
+                        .filter(lb("PRODUCT-SERVICE"))
+                        .filter(jwtFilter.applyAdminFilter()) // <-- Blocks non-admins
                         .build());
     }
 }

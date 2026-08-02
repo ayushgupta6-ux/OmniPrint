@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Upload,
   Sparkles,
@@ -10,10 +10,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/lib/products";
+import { useConfigStore } from "@/store/useConfigStore";
+// Note: Ensure your Product type is imported from wherever you defined it (e.g., hooks/useCatalog)
+import type { Product } from "@/hooks/useCatalog"; 
 
 interface ProductConfiguratorProps {
   product: Product;
@@ -26,20 +27,26 @@ export function ProductConfigurator({
   product,
   images,
 }: ProductConfiguratorProps) {
+  // Local state for the image gallery only
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selections, setSelections] = useState<Record<string, string>>({});
-  const [designPath, setDesignPath] = useState<
-    "upload" | "ai" | "consult" | null
-  >(null);
-  const [needsInstallation, setNeedsInstallation] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  const handleSelection = (filterLabel: string, option: string) => {
-    setSelections((prev) => ({
-      ...prev,
-      [filterLabel]: option,
-    }));
-  };
+  // Bring in global state from Zustand
+  const {
+    selections,
+    designPath,
+    needsInstallation,
+    uploadedFile,
+    setSelection,
+    setDesignPath,
+    setNeedsInstallation,
+    setUploadedFile,
+    resetConfig,
+  } = useConfigStore();
+
+  // Reset the configuration when switching to a different product
+  useEffect(() => {
+    resetConfig();
+  }, [product.id, resetConfig]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +57,9 @@ export function ProductConfigurator({
   };
 
   const isConfigComplete =
-    Object.keys(selections).length === product.filters.length && designPath;
+    product.filters &&
+    Object.keys(selections).length === product.filters.length &&
+    designPath;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
@@ -95,7 +104,7 @@ export function ProductConfigurator({
         {/* Product info */}
         <div>
           <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            {product.category}
+            {product.categories?.[0]?.name || "Product"}
           </span>
           <h1 className="font-serif text-3xl md:text-4xl mt-2 mb-4">
             {product.name}
@@ -107,7 +116,7 @@ export function ProductConfigurator({
 
         {/* Filters */}
         <div className="space-y-6">
-          {product.filters.map((filter) => (
+          {product.filters?.map((filter) => (
             <div key={filter.label} className="space-y-3">
               <Label className="text-sm font-medium flex items-center justify-between">
                 <span>{filter.label}</span>
@@ -122,7 +131,7 @@ export function ProductConfigurator({
                 {filter.options.map((option) => (
                   <button
                     key={option}
-                    onClick={() => handleSelection(filter.label, option)}
+                    onClick={() => setSelection(filter.label, option)}
                     className={cn(
                       "px-4 py-2 rounded-lg text-sm font-medium transition-all border",
                       selections[filter.label] === option

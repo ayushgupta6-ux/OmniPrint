@@ -13,7 +13,17 @@ public class JwtAuthenticationFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    // Standard filter for any logged-in user
     public HandlerFilterFunction<ServerResponse, ServerResponse> applyFilter() {
+        return createFilter(false);
+    }
+
+    // Strict filter for ADMIN only
+    public HandlerFilterFunction<ServerResponse, ServerResponse> applyAdminFilter() {
+        return createFilter(true);
+    }
+
+    private HandlerFilterFunction<ServerResponse, ServerResponse> createFilter(boolean requireAdmin) {
         return (request, next) -> {
 
             // 1. Get Authorization Header
@@ -29,13 +39,18 @@ public class JwtAuthenticationFilter {
                 String userId = jwtUtil.extractUserId(token);
                 String role = jwtUtil.extractRole(token);
 
-                // 3. Mutate Request to add downstream headers
+                // 3. Check for Admin Role if required
+                if (requireAdmin && !"ADMIN".equalsIgnoreCase(role)) {
+                    return ServerResponse.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
+                }
+
+                // 4. Mutate Request to add downstream headers
                 ServerRequest modifiedRequest = ServerRequest.from(request)
                         .header("X-User-Id", userId)
                         .header("X-User-Role", role)
                         .build();
 
-                // 4. Continue to the next step
+                // 5. Continue to the next step
                 return next.handle(modifiedRequest);
 
             } catch (Exception e) {
