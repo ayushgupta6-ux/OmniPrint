@@ -43,7 +43,7 @@ public class ProductCatalogService {
     }
 
     // Dynamic Quotation Engine
-    @Transactional()
+    @Transactional(readOnly = true)
     public QuotationDTOs.Response calculateQuote(QuotationDTOs.Request request) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found: " + request.getProductId()));
@@ -77,24 +77,22 @@ public class ProductCatalogService {
     @Transactional
     public Product createProduct(ProductCreateDTO dto) {
 
-        // 1. Initialize the Product
+        // 1. Initialize the Product with List<String> images
         Product product = Product.builder()
                 .id(dto.getId())
                 .name(dto.getName())
                 .slug(dto.getSlug())
                 .description(dto.getDescription())
                 .basePrice(dto.getBasePrice())
-                .imageUrl(dto.getImageUrl())
+                .images(dto.getImages() != null ? dto.getImages() : List.of()) // Set image URLs list
                 .isActive(true)
                 .build();
 
         // 2. Handle Multiple Categories & On-the-fly Creation
         if (dto.getCategories() != null && !dto.getCategories().isEmpty()) {
             List<Category> productCategories = dto.getCategories().stream().map(catDto -> {
-                // Try to find the category in the DB
                 return categoryRepository.findById(catDto.getId())
                         .orElseGet(() -> {
-                            // It doesn't exist? Create a new one on the fly!
                             Category newCategory = Category.builder()
                                     .id(catDto.getId())
                                     .name(catDto.getName())
@@ -102,7 +100,7 @@ public class ProductCatalogService {
                                     .description(catDto.getDescription())
                                     .imageUrl(catDto.getImageUrl())
                                     .build();
-                            return categoryRepository.save(newCategory); // Save to DB immediately
+                            return categoryRepository.save(newCategory);
                         });
             }).toList();
 
@@ -136,7 +134,7 @@ public class ProductCatalogService {
             product.setDiscountTiers(tierEntities);
         }
 
-        // 5. Save the product (Cascade rules will save filters and tiers)
+        // 5. Save product
         return productRepository.save(product);
     }
 }

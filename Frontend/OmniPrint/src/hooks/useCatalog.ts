@@ -8,7 +8,7 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
-  imageUrl: string;
+  images: string[];
   basePrice: number;
   categories: Category[];
   filters: { label: string; options: string[] }[];

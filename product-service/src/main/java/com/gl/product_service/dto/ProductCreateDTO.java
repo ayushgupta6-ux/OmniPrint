@@ -10,16 +10,16 @@ public class ProductCreateDTO {
     private String id;
     private String name;
     private String slug;
-
-    // REMOVED: private String categoryId; <-- You don't need this anymore
-
     private String description;
     private BigDecimal basePrice;
-    private String imageUrl;
+
+    // --- CHANGED: Replaced imageUrl with images ---
+    private List<String> images;
+    // ----------------------------------------------
 
     private List<FilterDTO> filters;
     private List<TierDTO> discountTiers;
-    private List<CategoryRequestDTO> categories; // <-- This handles your categories now
+    private List<CategoryRequestDTO> categories;
 
     @Data
     public static class FilterDTO {

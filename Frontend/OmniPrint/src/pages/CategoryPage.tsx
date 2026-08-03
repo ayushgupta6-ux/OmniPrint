@@ -25,8 +25,7 @@ export default function CategoryPage() {
     <main className="pt-20">
       <section className="relative h-[40vh] min-h-[300px] flex items-end">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${category.imageUrl})` }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/50 to-foreground/20" />
-        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" /> 
         <div className="relative z-10 mx-auto max-w-7xl w-full px-4 lg:px-8 pb-8 lg:pb-12">
           {/* Header remains the same */}
           <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl text-card mb-2">{category.name}</h1>
@@ -43,7 +42,7 @@ export default function CategoryPage() {
                 <div className="aspect-[4/3] overflow-hidden">
                   <div
                     className="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{ backgroundImage: `url(${product.imageUrl})` }}
+                    style={{ backgroundImage: `url(${product.images[0] || "/placeholder-image.png"})` }}
                   />
                 </div>
                 <div className="p-6">

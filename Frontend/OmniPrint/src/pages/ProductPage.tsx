@@ -12,7 +12,7 @@ export default function ProductPage() {
   if (isError || !product) return <NotFound />;
 
   // Cloudinary allows arrays, but since our DB has a single imageUrl, we wrap it in an array for the configurator
-  const images = [product.imageUrl]; 
+  const images = product.images.length > 0 ? product.images : ["/placeholder-image.png"]; // Fallback to a placeholder if no images
 
   return (
     <main className="pt-20">

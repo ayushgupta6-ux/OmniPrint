@@ -12,11 +12,11 @@ import java.util.Map;
 public class JwtService {
     private final String SECRET = "YourSuperSecretKeyForJwtGenerationMakeItLongAndSecure";
 
-    public String generateToken(String email, String userId, String role) {
+    public String generateToken(String email, String userId, String role,String name) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("role", role);
-
+        claims.put("name",name);
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)

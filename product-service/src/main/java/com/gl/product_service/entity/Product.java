@@ -45,8 +45,14 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "product_images",
+            joinColumns = @JoinColumn(name = "product_id")
+    )
     @Column(name = "image_url")
-    private String imageUrl;
+    @Builder.Default
+    private List<String> images = new ArrayList<>();
 
     @Column(name = "base_price", nullable = false)
     private BigDecimal basePrice;

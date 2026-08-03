@@ -12,6 +12,8 @@ import ContactPage from '@/pages/ContactPage';
 import ProductPage from '@/pages/ProductPage';
 import RootLayout from '@/RootLayout';
 import CategoryPage from '@/pages/CategoryPage';
+import AdminAddProductPage from './pages/AdminAddProductPage';
+import AdminRoute from './components/AdminRoute';
 
 
 const queryClient = new QueryClient();
@@ -47,6 +49,15 @@ const router = createBrowserRouter([
         {
         path: "category/:slug",
         element: <CategoryPage />
+      },
+      {
+        element: <AdminRoute />, // This intercepts all routes inside 'children'
+        children: [
+          {
+            path: "admin/products/add",
+            element: < AdminAddProductPage />
+          }
+        ]
       },
       {
         path: "*",
