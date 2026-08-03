@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -136,5 +137,85 @@ public class ProductCatalogService {
 
         // 5. Save product
         return productRepository.save(product);
+    }
+
+    @Transactional
+    public Product updateProduct(String id, ProductCreateDTO dto) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+
+        // 1. Update basic fields
+        product.setName(dto.getName());
+        product.setSlug(dto.getSlug());
+        product.setDescription(dto.getDescription());
+        product.setBasePrice(dto.getBasePrice());
+
+        // 2. Update Images safely (Wrap in ArrayList to ensure it is mutable)
+        if (dto.getImages() != null) {
+            product.getImages().clear();
+            product.getImages().addAll(new ArrayList<>(dto.getImages()));
+        }
+
+        // 3. Update Categories (Many-to-Many)
+        if (dto.getCategories() != null && !dto.getCategories().isEmpty()) {
+            List<Category> productCategories = dto.getCategories().stream().map(catDto -> {
+                return categoryRepository.findById(catDto.getId())
+                        .orElseGet(() -> {
+                            Category newCategory = Category.builder()
+                                    .id(catDto.getId())
+                                    .name(catDto.getName())
+                                    .slug(catDto.getSlug())
+                                    .description(catDto.getDescription())
+                                    .imageUrl(catDto.getImageUrl())
+                                    .build();
+                            return categoryRepository.save(newCategory);
+                        });
+            }).collect(Collectors.toList()); // <--- FIX: Changed from .toList() to ensure it's MUTABLE
+
+            product.setCategories(productCategories);
+        } else {
+            throw new RuntimeException("A product must have at least one category.");
+        }
+
+        // 4. Update Filters (One-to-Many)
+        if (dto.getFilters() != null) {
+            product.getFilters().clear();
+
+            Set<ProductFilter> filterEntities = dto.getFilters().stream().map(f ->
+                    ProductFilter.builder()
+                            .product(product)
+                            .label(f.getLabel())
+                            .options(new ArrayList<>(f.getOptions())) // Ensure options list is mutable
+                            .build()
+            ).collect(Collectors.toSet());
+
+            product.getFilters().addAll(filterEntities);
+        }
+
+        // 5. Update Discount Tiers (One-to-Many)
+        if (dto.getDiscountTiers() != null) {
+            product.getDiscountTiers().clear();
+
+            Set<QuantityDiscountTier> tierEntities = dto.getDiscountTiers().stream().map(t ->
+                    QuantityDiscountTier.builder()
+                            .product(product)
+                            .minQuantity(t.getMinQuantity())
+                            .maxQuantity(t.getMaxQuantity())
+                            .discountPercentage(t.getDiscountPercentage())
+                            .build()
+            ).collect(Collectors.toSet());
+
+            product.getDiscountTiers().addAll(tierEntities);
+        }
+
+        // 6. Save the updated product
+        return productRepository.save(product);
+    }
+    @Transactional
+    public void deleteProduct(String id) {
+        if (!productRepository.existsById(id)) {
+            throw new RuntimeException("Product not found");
+        }
+        productRepository.deleteById(id);
     }
 }

@@ -200,7 +200,7 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-foreground line-clamp-1">{product.name}</span>
-                          <span className="text-xs text-muted-foreground">${product.basePrice}</span>
+                          <span className="text-xs text-muted-foreground">₹{product.basePrice}</span>
                         </div>
                       </Link>
                     ))}
@@ -230,7 +230,7 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
                 <span className="text-sm font-medium">Welcome, {userName?.split(" ")[0] || "User"}</span>
                 
                 {isAdmin && (
-                  <Link to="/admin/products/add" className="flex items-center gap-1 text-sm font-medium text-accent hover:text-accent/80 transition-colors">
+                  <Link to="/admin/products" className="flex items-center gap-1 text-sm font-medium text-accent hover:text-accent/80 transition-colors">
                     <ShieldCheck className="h-4 w-4" />
                     Admin
                   </Link>
@@ -333,7 +333,7 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
                 </div>
                 
                 {isAdmin && (
-                  <Link to="/admin/products/add" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors">
+                  <Link to="/admin/products" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors">
                     <ShieldCheck className="h-4 w-4" />
                     Admin Panel
                   </Link>

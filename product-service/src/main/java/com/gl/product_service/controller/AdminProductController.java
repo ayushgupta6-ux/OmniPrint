@@ -27,4 +27,16 @@ public class AdminProductController {
         // Return 201 Created status code along with the saved product
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable String id, @RequestBody ProductCreateDTO dto) {
+        return ResponseEntity.ok(productService.updateProduct(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable String id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok("Product deleted successfully");
+    }
+
 }
