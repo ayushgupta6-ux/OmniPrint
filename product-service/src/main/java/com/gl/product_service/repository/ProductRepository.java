@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
 
-    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.filters LEFT JOIN FETCH p.discountTiers WHERE p.slug = :slug AND p.isActive = true")
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.filters WHERE p.slug = :slug AND p.isActive = true")
     Optional<Product> findBySlugWithDetails(@Param("slug") String slug);
 
     // --- UPDATED QUERY ---

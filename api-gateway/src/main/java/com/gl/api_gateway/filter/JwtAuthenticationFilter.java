@@ -13,17 +13,23 @@ public class JwtAuthenticationFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Standard filter for any logged-in user
+    // Standard filter for any logged-in user (CLIENT, ADMIN, or PRINT_AGENCY)
     public HandlerFilterFunction<ServerResponse, ServerResponse> applyFilter() {
-        return createFilter(false);
+        return createFilter(null);
     }
 
     // Strict filter for ADMIN only
     public HandlerFilterFunction<ServerResponse, ServerResponse> applyAdminFilter() {
-        return createFilter(true);
+        return createFilter("ADMIN");
     }
 
-    private HandlerFilterFunction<ServerResponse, ServerResponse> createFilter(boolean requireAdmin) {
+    // --- NEW: Strict filter for VENDORS (PRINT_AGENCY) only ---
+    public HandlerFilterFunction<ServerResponse, ServerResponse> applyVendorFilter() {
+        return createFilter("PRINT_AGENCY");
+    }
+
+    // Refactored helper method
+    private HandlerFilterFunction<ServerResponse, ServerResponse> createFilter(String requiredRole) {
         return (request, next) -> {
 
             // 1. Get Authorization Header
@@ -39,8 +45,8 @@ public class JwtAuthenticationFilter {
                 String userId = jwtUtil.extractUserId(token);
                 String role = jwtUtil.extractRole(token);
 
-                // 3. Check for Admin Role if required
-                if (requireAdmin && !"ADMIN".equalsIgnoreCase(role)) {
+                // 3. Check for Specific Role if required
+                if (requiredRole != null && !requiredRole.equalsIgnoreCase(role)) {
                     return ServerResponse.status(HttpStatus.FORBIDDEN).build(); // 403 Forbidden
                 }
 

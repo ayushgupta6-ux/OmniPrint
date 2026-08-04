@@ -18,7 +18,7 @@ public class ProductCreateDTO {
     // ----------------------------------------------
 
     private List<FilterDTO> filters;
-    private List<TierDTO> discountTiers;
+
     private List<CategoryRequestDTO> categories;
 
     @Data
@@ -27,12 +27,7 @@ public class ProductCreateDTO {
         private List<String> options;
     }
 
-    @Data
-    public static class TierDTO {
-        private Integer minQuantity;
-        private Integer maxQuantity;
-        private BigDecimal discountPercentage;
-    }
+
 
     @Data
     public static class CategoryRequestDTO {

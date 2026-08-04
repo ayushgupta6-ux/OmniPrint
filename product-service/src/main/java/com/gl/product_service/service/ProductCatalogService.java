@@ -1,7 +1,7 @@
 package com.gl.product_service.service;
 
 import com.gl.product_service.dto.ProductCreateDTO;
-import com.gl.product_service.dto.QuotationDTOs;
+
 import com.gl.product_service.entity.Category;
 import com.gl.product_service.entity.Product;
 import com.gl.product_service.entity.ProductFilter;
@@ -43,37 +43,6 @@ public class ProductCatalogService {
                 .orElseThrow(() -> new RuntimeException("Product not found with slug: " + slug));
     }
 
-    // Dynamic Quotation Engine
-    @Transactional(readOnly = true)
-    public QuotationDTOs.Response calculateQuote(QuotationDTOs.Request request) {
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found: " + request.getProductId()));
-
-        int qty = request.getQuantity();
-        BigDecimal basePrice = product.getBasePrice();
-        BigDecimal discountPercent = BigDecimal.ZERO;
-
-        // Find applicable quantity tier
-        for (QuantityDiscountTier tier : product.getDiscountTiers()) {
-            if (qty >= tier.getMinQuantity() && (tier.getMaxQuantity() == null || qty <= tier.getMaxQuantity())) {
-                discountPercent = tier.getDiscountPercentage();
-                break;
-            }
-        }
-
-        BigDecimal discountFactor = BigDecimal.ONE.subtract(discountPercent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-        BigDecimal finalUnitPrice = basePrice.multiply(discountFactor).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal totalPrice = finalUnitPrice.multiply(BigDecimal.valueOf(qty)).setScale(2, RoundingMode.HALF_UP);
-
-        return new QuotationDTOs.Response(
-                product.getId(),
-                qty,
-                basePrice,
-                discountPercent,
-                finalUnitPrice,
-                totalPrice
-        );
-    }
 
     @Transactional
     public Product createProduct(ProductCreateDTO dto) {
@@ -122,18 +91,7 @@ public class ProductCatalogService {
             product.setFilters(filterEntities);
         }
 
-        // 4. Map Discount Tiers
-        if (dto.getDiscountTiers() != null) {
-            Set<QuantityDiscountTier> tierEntities = dto.getDiscountTiers().stream().map(t ->
-                    QuantityDiscountTier.builder()
-                            .product(product)
-                            .minQuantity(t.getMinQuantity())
-                            .maxQuantity(t.getMaxQuantity())
-                            .discountPercentage(t.getDiscountPercentage())
-                            .build()
-            ).collect(Collectors.toSet());
-            product.setDiscountTiers(tierEntities);
-        }
+
 
         // 5. Save product
         return productRepository.save(product);
@@ -192,21 +150,6 @@ public class ProductCatalogService {
             product.getFilters().addAll(filterEntities);
         }
 
-        // 5. Update Discount Tiers (One-to-Many)
-        if (dto.getDiscountTiers() != null) {
-            product.getDiscountTiers().clear();
-
-            Set<QuantityDiscountTier> tierEntities = dto.getDiscountTiers().stream().map(t ->
-                    QuantityDiscountTier.builder()
-                            .product(product)
-                            .minQuantity(t.getMinQuantity())
-                            .maxQuantity(t.getMaxQuantity())
-                            .discountPercentage(t.getDiscountPercentage())
-                            .build()
-            ).collect(Collectors.toSet());
-
-            product.getDiscountTiers().addAll(tierEntities);
-        }
 
         // 6. Save the updated product
         return productRepository.save(product);

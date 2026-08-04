@@ -1,6 +1,5 @@
 package com.gl.product_service.controller;
 
-import com.gl.product_service.dto.QuotationDTOs;
 import com.gl.product_service.entity.Product;
 import com.gl.product_service.service.ProductCatalogService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +33,5 @@ public class ProductCatalogController {
         return ResponseEntity.ok(product);
     }
 
-    // POST /api/products/quote -> Calculate dynamic price based on quantity/tiers
-    @PostMapping("/quote")
-    public ResponseEntity<QuotationDTOs.Response> getQuotation(@RequestBody QuotationDTOs.Request request) {
-        QuotationDTOs.Response quote = productService.calculateQuote(request);
-        return ResponseEntity.ok(quote);
-    }
+
 }

@@ -63,8 +63,7 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductFilter> filters = new HashSet<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<QuantityDiscountTier> discountTiers = new HashSet<>();
+
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

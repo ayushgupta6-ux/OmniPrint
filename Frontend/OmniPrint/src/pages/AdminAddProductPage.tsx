@@ -30,10 +30,7 @@ export default function AdminAddProductPage() {
   // 4. Filters State (Options kept as comma-separated string for easy input)
   const [filters, setFilters] = useState([{ label: "", optionsString: "" }]);
 
-  // 5. Discount Tiers State
-  const [discountTiers, setDiscountTiers] = useState([
-    { minQuantity: 1, maxQuantity: "", discountPercentage: 0 }
-  ]);
+ 
 
   // --- Handlers for Dynamic Arrays ---
   const addCategory = () => setCategories([...categories, { id: "", name: "", slug: "", description: "", imageUrl: "" }]);
@@ -42,9 +39,7 @@ export default function AdminAddProductPage() {
   const addFilter = () => setFilters([...filters, { label: "", optionsString: "" }]);
   const removeFilter = (index: number) => setFilters(filters.filter((_, i) => i !== index));
 
-  const addTier = () => setDiscountTiers([...discountTiers, { minQuantity: 1, maxQuantity: "", discountPercentage: 0 }]);
-  const removeTier = (index: number) => setDiscountTiers(discountTiers.filter((_, i) => i !== index));
-
+ 
   // --- Image Upload to Cloudinary ---
   const uploadImagesToCloudinary = async (): Promise<string[]> => {
     const urls: string[] = [];
@@ -90,12 +85,7 @@ export default function AdminAddProductPage() {
           options: f.optionsString.split(",").map(opt => opt.trim()).filter(Boolean)
         })),
         
-        // Convert maxQuantity empty string to null for infinity upper bounds
-        discountTiers: discountTiers.map(t => ({
-          minQuantity: Number(t.minQuantity),
-          maxQuantity: t.maxQuantity === "" ? null : Number(t.maxQuantity),
-          discountPercentage: Number(t.discountPercentage)
-        }))
+        
       };
 
       // 3. Send to API Gateway (Admin Route)
@@ -227,36 +217,7 @@ export default function AdminAddProductPage() {
           ))}
         </section>
 
-        {/* --- 5. Discount Tiers --- */}
-        <section className="space-y-4 p-6 bg-card border border-border rounded-xl shadow-sm">
-          <div className="flex justify-between items-center border-b border-border pb-2">
-            <h2 className="text-xl font-medium">Volume Discount Tiers</h2>
-            <Button type="button" variant="outline" size="sm" onClick={addTier}><Plus className="h-4 w-4 mr-2"/> Add Tier</Button>
-          </div>
-          {discountTiers.map((tier, index) => (
-            <div key={index} className="flex gap-4 items-end">
-              <div className="space-y-2 w-1/3">
-                <Label>Min Quantity</Label>
-                <input required type="number" min="1" className="w-full p-2 border rounded-md" value={tier.minQuantity} onChange={(e) => {
-                  const newT = [...discountTiers]; newT[index].minQuantity = Number(e.target.value); setDiscountTiers(newT);
-                }}/>
-              </div>
-              <div className="space-y-2 w-1/3">
-                <Label>Max Quantity (Leave empty for infinity)</Label>
-                <input type="number" className="w-full p-2 border rounded-md" value={tier.maxQuantity} onChange={(e) => {
-                  const newT = [...discountTiers]; newT[index].maxQuantity = e.target.value; setDiscountTiers(newT);
-                }}/>
-              </div>
-              <div className="space-y-2 w-1/3">
-                <Label>Discount %</Label>
-                <input required type="number" step="0.1" className="w-full p-2 border rounded-md" value={tier.discountPercentage} onChange={(e) => {
-                  const newT = [...discountTiers]; newT[index].discountPercentage = Number(e.target.value); setDiscountTiers(newT);
-                }}/>
-              </div>
-              <Button type="button" variant="ghost" className="text-red-500 mb-1" onClick={() => removeTier(index)}><Trash2 className="h-4 w-4"/></Button>
-            </div>
-          ))}
-        </section>
+    
 
         {/* --- Submit Button --- */}
         <Button type="submit" size="lg" className="w-full py-6 text-lg" disabled={isSubmitting}>
