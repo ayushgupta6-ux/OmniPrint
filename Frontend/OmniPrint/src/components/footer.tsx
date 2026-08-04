@@ -35,12 +35,14 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
-            <Link to  ="/" className="flex items-center gap-2 mb-4">
-              <span className="font-serif text-4xl font-normal tracking-tight bg-transparent  rounded dark:bg-transparent">
-            <span className="text-[#362F8F] dark:text-blue-400">S</span>
-            <span className="text-red-500">B</span>
-            <span className="text-[#362F8F] dark:text-blue-400">A</span>
-          </span>
+            <Link to="/" className="flex items-center gap-3">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12C10 9.33 8 8 6 8a4 4 0 1 0 0 8c2 0 4-1.33 6-4Z" stroke="#0056B3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 12c2 2.67 4 4 6 4a4 4 0 1 0 0-8c-2 0-4 1.33-6 4Z" stroke="#E31D2A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="font-serif text-2xl font-normal tracking-tight bg-transparent rounded">
+                OmniPrint
+              </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-5 max-w-xs">
               OmniPrint - Your trusted partner for
@@ -62,7 +64,7 @@ export function Footer() {
                   href="mailto:shribalji136@gmail.comm"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                 hello@omniprint.com
+                  hello@omniprint.com
                 </a>
               </div>
             </div>
@@ -95,10 +97,10 @@ export function Footer() {
               Serving Noida, Greater Noida & Delhi NCR, Bangloere, Mumbai, Pune, Hyderabad, Chennai, Kolkata, Ahmedabad, Jaipur, Lucknow, Chandigarh & All Over India
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              OmniPrint specializes in industrial signages for Sector 62, 63, and corporate branding for 
-              Expressway Tech Parks. We serve businesses across Noida, Greater Noida, Ghaziabad, 
-              and the entire Delhi NCR region. Our in-house manufacturing facility in Sector-10 
-              ensures quick turnaround times and consistent quality for all your signage, 
+              OmniPrint specializes in industrial signages for Sector 62, 63, and corporate branding for
+              Expressway Tech Parks. We serve businesses across Noida, Greater Noida, Ghaziabad,
+              and the entire Delhi NCR region. Our in-house manufacturing facility in Sector-10
+              ensures quick turnaround times and consistent quality for all your signage,
               printing, and branding needs.
             </p>
           </div>

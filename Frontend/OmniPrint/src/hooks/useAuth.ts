@@ -31,7 +31,8 @@ export const useAuth = () => {
         name: userData.name,
         email: userData.email,
         number: userData.phoneNumber, // Backend expects 'number'
-        password: userData.password
+        password: userData.password,
+        role:userData.role 
       };
       const response = await axios.post(`${API_URL}/register`, payload);
       return response.data;
@@ -48,5 +49,6 @@ interface user{
     name: string,
     email: string,
     phoneNumber: string,
-    password: string    
+    password: string,
+    role: string
 }

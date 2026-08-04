@@ -1,10 +1,10 @@
- import './App.css'
+import './App.css'
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 
-import  HomePage from '@/pages/HomePage';
+import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import LoginPage from '@/pages/LoginPage';
 import SignupPage from '@/pages/SignupPage';
@@ -16,6 +16,12 @@ import AdminAddProductPage from './pages/AdminAddProductPage';
 import AdminRoute from './components/AdminRoute';
 import AdminProductsListPage from './pages/AdminProductsListPage';
 import AdminEditProductPage from './pages/AdminEditProductPage';
+import VendorRoute from './components/VendorRoute';
+import VendorDashboardPage from './pages/VendorDashboardPage';
+import VendorOnboardingPage from './pages/VendorOnboardingPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import CheckoutPage from './pages/CheckoutPage';
+import VendorAddProductPage from './pages/VendorAddProductPage';
 
 
 const queryClient = new QueryClient();
@@ -26,7 +32,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
-    
+
     children: [
       {
         index: true, // This makes HomePage the default component at "/"
@@ -34,21 +40,21 @@ const router = createBrowserRouter([
       },
       {
         path: "login",
-        element: <LoginPage/>
+        element: <LoginPage />
       },
       {
         path: "signup",
-        element: <SignupPage/>
+        element: <SignupPage />
       },
       {
         path: "contact",
-        element: <ContactPage/>
+        element: <ContactPage />
       },
       {
         path: "product/:slug",
         element: <ProductPage />
       },
-        {
+      {
         path: "category/:slug",
         element: <CategoryPage />
       },
@@ -70,8 +76,35 @@ const router = createBrowserRouter([
         ]
       },
       {
+        element: <VendorRoute />, // This intercepts all routes inside 'children'
+        children: [
+          {
+            path: "vendor/onboarding",
+            element: <VendorOnboardingPage />
+          },
+          {
+            path: "vendor/dashboard",
+            element: <VendorDashboardPage />
+          },
+          {
+            path: "vendor/catalog/add",
+            element: <VendorAddProductPage />
+          },
+        ]
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "checkout",
+            element: <CheckoutPage />
+          }
+        ]
+      },
+
+      {
         path: "*",
-        element: <NotFound/>
+        element: <NotFound />
       }
     ]
   }

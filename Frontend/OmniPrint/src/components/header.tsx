@@ -2,7 +2,7 @@
 
 import { Link, useNavigate } from "react-router";
 import { useEffect, useState, useRef } from "react";
-import { Search, Menu, X, User, Moon, Sun, LogOut, ChevronDown, Loader2, ShieldCheck, Package } from "lucide-react";
+import { Search, Menu, X, User, Moon, Sun, LogOut, ChevronDown, Loader2, ShieldCheck, Package, Store } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
   const searchContainerRef = useRef<HTMLDivElement>(null);
   
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isVendor, setIsVendor] = useState(false);
   const [userName, setUserName] = useState("User");
   
   const { theme, setTheme } = useTheme();
@@ -58,14 +59,17 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
           
           const decodedToken = JSON.parse(jsonPayload);
           setIsAdmin(decodedToken.role === "ADMIN"); 
+          setIsVendor(decodedToken.role === "PRINT_AGENCY");
           setUserName(decodedToken.name || "User");
         } catch (error) {
           console.error("Failed to decode token in header", error);
           setIsAdmin(false);
+          setIsVendor(false);
         }
       }
     } else {
       setIsAdmin(false); 
+      setIsVendor(false);
     }
   }, [isAuthenticated]);
 
@@ -235,6 +239,15 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
                     Admin
                   </Link>
                 )}
+                {
+
+                  isVendor && (
+                    <Link to="/vendor/dashboard" className="flex items-center gap-1 text-sm font-medium text-accent hover:text-accent/80 transition-colors">
+                       <Store className="h-4 w-4 " />
+                      Vendor
+                    </Link>
+                  )
+                }
 
                 <Button variant="outline" size="sm" className="gap-2" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
@@ -338,6 +351,16 @@ export function Header({ isAuthenticated }: { isAuthenticated: boolean | null })
                     Admin Panel
                   </Link>
                 )}
+                 {
+
+                  isVendor && (
+                    <Link to="/vendor/dashboard" className="flex items-center gap-1 text-sm font-medium text-accent hover:text-accent/80 transition-colors">
+                        <Store className="h-4 w-4 " />
+                        
+                      Vendor
+                    </Link>
+                  )
+                }
 
                 <Button variant="outline" size="sm" className="gap-2 justify-center" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />

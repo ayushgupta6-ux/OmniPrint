@@ -39,10 +39,22 @@ public class GatewayConfig {
                         .build())
 
                 // --- 3. NEW VENDOR Route ---
+                .and(route("vendor-service-nearest")
+                        .route(req -> req.path().startsWith("/api/vendors/nearest"), http())
+                        .filter(lb("VENDOR-SERVICE"))
+                        .filter(jwtFilter.applyFilter()) // Standard filter: Any logged-in user can access this
+                        .build())
+
                 .and(route("vendor-service")
                         .route(req -> req.path().startsWith("/api/vendors"), http())
                         .filter(lb("VENDOR-SERVICE"))
                         .filter(jwtFilter.applyVendorFilter()) // <-- Blocks anyone who is not a PRINT_AGENCY
+                        .build())
+
+                .and(route("order-service")
+                        .route(req -> req.path().startsWith("/api/orders"), http())
+                        .filter(lb("ORDER-SERVICE"))
+                        .filter(jwtFilter.applyFilter()) // <-- Allows any logged-in user, injects X-User-Id
                         .build());
     }
 }

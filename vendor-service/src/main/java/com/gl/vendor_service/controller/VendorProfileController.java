@@ -16,14 +16,15 @@ public class VendorProfileController {
         this.profileRepository = profileRepository;
     }
 
-    // POST /api/vendors/profile -> Used when vendor completes setup
     @PostMapping("/profile")
-    public ResponseEntity<VendorProfile> createProfile(@RequestBody VendorProfileDTO request) {
+    public ResponseEntity<VendorProfile> createProfile(
+            @RequestHeader("X-User-Id") Long tokenId, // <-- SECURE: Get ID from Gateway Token
+            @RequestBody VendorProfileDTO request) {
 
         VendorProfile profile = VendorProfile.builder()
-                .vendorId(request.getVendorId())
+                .vendorId(tokenId) // <-- Force it to use the token's ID
                 .agencyName(request.getAgencyName())
-                .address(request.getAddress()) // Now saving the physical address
+                .address(request.getAddress())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .isAcceptingOrders(true)

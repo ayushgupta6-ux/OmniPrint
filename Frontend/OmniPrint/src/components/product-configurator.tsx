@@ -16,7 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useConfigStore } from "@/store/useConfigStore";
-import type { Product } from "@/hooks/useCatalog"; 
+import type { Product } from "@/hooks/useCatalog";
+import { useNavigate } from "react-router";
 
 interface ProductConfiguratorProps {
   product: Product;
@@ -44,13 +45,15 @@ export function ProductConfigurator({
     resetConfig,
   } = useConfigStore();
 
-  const [quantity, setQuantity] = useState(1); 
-  const [isQuoting, setIsQuoting] = useState(false); 
-  const [quoteResult, setQuoteResult] = useState<any>(null); 
+  const [quantity, setQuantity] = useState(1);
+  const [isQuoting, setIsQuoting] = useState(false);
+  const [quoteResult, setQuoteResult] = useState<any>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     resetConfig();
-    setQuoteResult(null); 
+    setQuoteResult(null);
     setQuantity(1);
   }, [product.id, resetConfig]);
 
@@ -69,7 +72,7 @@ export function ProductConfigurator({
 
   const handleGetQuote = async () => {
     if (!isConfigComplete) return;
-    
+
     setIsQuoting(true);
     try {
       const response = await fetch("http://localhost:8080/api/products/quote", {
@@ -78,7 +81,7 @@ export function ProductConfigurator({
         body: JSON.stringify({
           productId: product.id,
           quantity: quantity,
-          selectedFilters: selections 
+          selectedFilters: selections
         })
       });
 
@@ -332,56 +335,56 @@ export function ProductConfigurator({
 
         {/* --- NEW: Advanced Quantity & Summary Section --- */}
         <div className="pt-6 border-t border-border space-y-5">
-          
+
           {/* Enhanced Quantity Selector */}
           <div className="space-y-3">
-             <Label className="text-sm font-medium">Select Quantity</Label>
-             
-             <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-               
-               {/* Minus / Plus Stepper */}
-               <div className="flex items-center border border-border rounded-lg bg-card overflow-hidden w-fit h-11 shadow-sm">
-                 <button 
-                   type="button"
-                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                   className="px-3 h-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
-                 >
-                   <Minus className="h-4 w-4" />
-                 </button>
-                 <input 
-                   type="number" 
-                   min="1" 
-                   value={quantity} 
-                   onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-                   className="w-16 h-full text-center bg-transparent focus:outline-none font-medium border-x border-border [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                 />
-                 <button 
-                   type="button"
-                   onClick={() => setQuantity(quantity + 1)}
-                   className="px-3 h-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
-                 >
-                   <Plus className="h-4 w-4" />
-                 </button>
-               </div>
+            <Label className="text-sm font-medium">Select Quantity</Label>
 
-               {/* Bulk Quick Select Buttons */}
-               <div className="flex flex-wrap gap-2">
-                 {QUICK_QUANTITIES.map((q) => (
-                   <button
-                     key={q}
-                     onClick={() => setQuantity(q)}
-                     className={cn(
-                       "px-4 py-2 rounded-lg text-sm font-medium transition-all border shadow-sm",
-                       quantity === q 
-                         ? "bg-accent text-accent-foreground border-accent" 
-                         : "bg-secondary text-muted-foreground border-transparent hover:border-border hover:bg-secondary/80"
-                     )}
-                   >
-                     {q}
-                   </button>
-                 ))}
-               </div>
-             </div>
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+
+              {/* Minus / Plus Stepper */}
+              <div className="flex items-center border border-border rounded-lg bg-card overflow-hidden w-fit h-11 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-3 h-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                  className="w-16 h-full text-center bg-transparent focus:outline-none font-medium border-x border-border [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-3 h-full hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground flex items-center justify-center"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Bulk Quick Select Buttons */}
+              <div className="flex flex-wrap gap-2">
+                {QUICK_QUANTITIES.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setQuantity(q)}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all border shadow-sm",
+                      quantity === q
+                        ? "bg-accent text-accent-foreground border-accent"
+                        : "bg-secondary text-muted-foreground border-transparent hover:border-border hover:bg-secondary/80"
+                    )}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Configuration summary */}
@@ -406,51 +409,33 @@ export function ProductConfigurator({
             </div>
           )}
 
-          {/* CTA Button */}
-          <Button
-            size="lg"
-            className="w-full text-base font-semibold shadow-md"
-            disabled={!isConfigComplete || isQuoting}
-            onClick={handleGetQuote} 
-          >
-            {isQuoting ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : null}
-            {isConfigComplete ? "Calculate Quote" : "Complete Configuration"}
-          </Button>
+          
 
           <p className="text-xs text-center text-muted-foreground">
             Get instant volume discounts on bulk orders!
           </p>
 
-          {/* Display the Quote Result dynamically */}
-          {quoteResult && (
-            <div className="mt-6 p-5 bg-card border-2 border-primary/30 rounded-xl shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <h3 className="font-serif font-bold text-xl text-foreground">Your Quotation</h3>
-                <span className="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-md font-bold tracking-wide uppercase">
-                  Estimated
-                </span>
-              </div>
-              
-              <div className="flex justify-between text-sm text-muted-foreground pt-2">
-                <span>Unit Price:</span> 
-                <span>${quoteResult.finalUnitPrice}</span>
-              </div>
-              
-              {quoteResult.discountPercent > 0 && (
-                <div className="flex justify-between text-sm text-green-600 font-bold bg-green-500/10 px-3 py-2 rounded-md">
-                  <span>Volume Discount Applied:</span> 
-                  <span>{quoteResult.discountPercent}% OFF</span>
-                </div>
-              )}
-              
-              <div className="flex justify-between font-bold text-foreground text-2xl pt-4 border-t border-border mt-3">
-                <span>Total ({quantity} items):</span> 
-                <span className="text-primary">${quoteResult.totalPrice}</span>
-              </div>
-              
-              <Button className="w-full mt-4" size="lg">Add to Cart</Button>
-            </div>
-          )}
+           {/* CTA Button */}
+          <Button
+            size="lg"
+            className="w-full text-base font-semibold shadow-md mt-6"
+            disabled={!isConfigComplete}
+            onClick={() => {
+              navigate('/checkout', { 
+                state: { 
+                  productId: product.id, 
+                  quantity: quantity,
+                  selections: selections 
+                } 
+              });
+            }} 
+          >
+            {isConfigComplete ? "Proceed to Checkout" : "Complete Configuration"}
+          </Button>
+
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            Delivery location is required on the next step to calculate your final price and volume discounts.
+          </p>
         </div>
       </div>
     </div>

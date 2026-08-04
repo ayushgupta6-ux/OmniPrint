@@ -7,12 +7,15 @@ import { Card, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { signupSchema } from '@/lib/validations';
 import { useAuth } from '@/hooks/useAuth';
+import { Store,User } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
   const { registerMutation } = useAuth();
-
+  const [role, setRole] = useState<'CLIENT' | 'PRINT_AGENCY'>('CLIENT');
   
 
   const {
@@ -24,11 +27,15 @@ export default function SignupPage() {
     mode: 'onChange',
   });
 
-  const onSubmit = async (data: any) => {
-    setServerError(null); // Clear previous errors on retry
+const onSubmit = async (data: any) => {
+    setServerError(null);
     try {
-      await registerMutation.mutateAsync(data);
-      navigate('/login'); // Redirect to login on success
+      // Inject the selected role into the payload
+      const payload = { ...data, role };
+      await registerMutation.mutateAsync(payload);
+      
+      alert(role === 'PRINT_AGENCY' ? 'Agency Account Created! Please login.' : 'Account Created! Please login.');
+      navigate('/login'); 
     } catch (error: any) {
       setServerError(
         error.response?.data?.message || 'Registration failed. Please try again.'
@@ -50,14 +57,16 @@ export default function SignupPage() {
         <div className="grid gap-12 lg:grid-cols-[1.1fr_1fr] items-center">
           <section className="space-y-6">
             <span className="inline-flex items-center rounded-full bg-secondary/80 px-4 py-2 text-sm font-semibold text-secondary-foreground">
-              Start a new project
+              {role === 'CLIENT' ? 'Start a new project' : 'Grow your print business'}
             </span>
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Create your OmniPrint account
+             <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+                {role === 'CLIENT' ? 'Create your OmniPrint account' : 'Partner with OmniPrint'}
               </h1>
               <p className="max-w-xl text-base leading-7 text-muted-foreground">
-                Sign up to request custom signage, track orders, and access dedicated support from OmniPrint.
+                {role === 'CLIENT' 
+                  ? 'Sign up to request custom signage, track orders, and access dedicated support.' 
+                  : 'Join our network of verified print agencies. Receive automated orders and manage your catalog dynamically.'}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -77,6 +86,31 @@ export default function SignupPage() {
               <div className="space-y-2">
                 <CardTitle className="text-2xl">Create a new account</CardTitle>
                 <CardDescription>Complete the form below to join the OmniPrint customer portal.</CardDescription>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setRole('CLIENT')}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-4 border rounded-xl transition-all",
+                    role === 'CLIENT' ? "border-primary bg-primary/5 text-primary" : "border-border bg-card text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <User className="h-6 w-6 mb-2" />
+                  <span className="text-sm font-medium">Customer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('PRINT_AGENCY')}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-4 border rounded-xl transition-all",
+                    role === 'PRINT_AGENCY' ? "border-primary bg-primary/5 text-primary" : "border-border bg-card text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Store className="h-6 w-6 mb-2" />
+                  <span className="text-sm font-medium">Print Agency</span>
+                </button>
               </div>
 
               {serverError && (
