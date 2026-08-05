@@ -1,10 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router";
-import { Loader2, Package, ShieldCheck, Wrench, Layers, Receipt,MapPin} from "lucide-react";
+import { Loader2, Package, ShieldCheck, Wrench, Layers, Receipt, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { api } from '@/api/api';
+
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix for default Leaflet marker missing in React
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Helper component to handle map clicks
+function MapClickHandler({ coordinates, setCoordinates, fetchNearestVendorQuote }: any) {
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      setCoordinates({ lat, lng });
+      fetchNearestVendorQuote(lat, lng);
+    },
+  });
+  return coordinates ? <Marker position={[coordinates.lat, coordinates.lng]} /> : null;
+}
+
+// Helper component to smoothly recenter the map on search or GPS detect
+function RecenterMap({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng], 15);
+  }, [lat, lng, map]);
+  return null;
+}
 
 export default function CheckoutPage() {
   const location = useLocation();
@@ -12,6 +49,7 @@ export default function CheckoutPage() {
   const orderData = location.state;
 
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryPhone, setDeliveryPhone] = useState(""); // Added Phone State
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
@@ -40,6 +78,27 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleSearchAddress = async () => {
+    if (!deliveryAddress) return alert("Please type an address first.");
+    
+    try {
+      // Free geocoding API from OpenStreetMap
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(deliveryAddress)}`);
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        setCoordinates({ lat, lng });
+        fetchNearestVendorQuote(lat, lng);
+      } else {
+        alert("Could not find coordinates for this address. Try typing a broader area, or click the map directly!");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+    }
+  };
+
   const fetchNearestVendorQuote = async (lat: number, lng: number) => {
     setIsFetchingQuote(true);
     try {
@@ -63,8 +122,8 @@ export default function CheckoutPage() {
   };
 
   const handleCheckout = async () => {
-    if (!deliveryAddress.trim()) {
-      alert("Please provide a complete delivery address.");
+    if (!deliveryAddress.trim() || !deliveryPhone.trim()) {
+      alert("Please provide both a delivery address and a contact phone number.");
       return;
     }
 
@@ -76,6 +135,7 @@ export default function CheckoutPage() {
         deliveryLat: coordinates?.lat,
         deliveryLng: coordinates?.lng,
         deliveryAddress: deliveryAddress,
+        customerPhone: deliveryPhone, // Passing Phone to backend
         selectedFilters: orderData.selections,         
         needsInstallation: orderData.needsInstallation,
         designPath: orderData.designPath               
@@ -139,27 +199,69 @@ export default function CheckoutPage() {
           <Card className="p-6 space-y-6 shadow-sm border-border">
             <h2 className="text-xl font-medium">Delivery Location</h2>
             <p className="text-sm text-muted-foreground">
-              We need your exact location to find the closest vendor and calculate final pricing.
+              Type your address or click exactly where you are on the map below.
             </p>
-            <Button 
-              variant={coordinates ? "outline" : "default"} 
-              className="w-full h-12 text-md" 
-              onClick={handleDetectLocation}
-            >
-              {coordinates ? "Location Detected ✓" : "Auto-Detect Location"}
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1 h-12" 
+                onClick={handleDetectLocation}
+              >
+                Auto-Detect Current GPS
+              </Button>
+            </div>
 
-            {coordinates && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                <Label>Full Delivery Address</Label>
-                <textarea 
-                  className="w-full p-3 bg-background border border-border rounded-md min-h-[100px] outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Street address, building, suite, or floor..."
+            <div className="space-y-2">
+              <Label>Search Address on Map</Label>
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  className="flex-1 p-3 bg-background border border-border rounded-md outline-none focus:ring-2 focus:ring-primary h-12"
+                  placeholder="e.g. Connaught Place, New Delhi"
                   value={deliveryAddress}
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                 />
+                <Button className="h-12 w-12 p-0" onClick={handleSearchAddress}>
+                  <Search className="h-5 w-5" />
+                </Button>
               </div>
-            )}
+            </div>
+
+            {/* --- THE REAL MAP --- */}
+            <div className="h-[300px] w-full rounded-md overflow-hidden border border-border z-0 relative">
+              <MapContainer 
+                center={coordinates ? [coordinates.lat, coordinates.lng] : [28.6139, 77.2090]} // Defaults to New Delhi
+                zoom={coordinates ? 15 : 10} 
+                style={{ height: '100%', width: '100%' }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                
+                {/* Smoothly recenters map on search or GPS auto-detect */}
+                {coordinates && <RecenterMap lat={coordinates.lat} lng={coordinates.lng} />}
+                
+                <MapClickHandler 
+                  coordinates={coordinates} 
+                  setCoordinates={setCoordinates} 
+                  fetchNearestVendorQuote={fetchNearestVendorQuote} 
+                />
+              </MapContainer>
+            </div>
+            
+            {/* Phone Number Input */}
+            <div className="space-y-2 pt-2">
+              <Label>Contact Phone Number</Label>
+              <input 
+                type="tel"
+                className="w-full p-3 bg-background border border-border rounded-md outline-none focus:ring-2 focus:ring-primary h-12"
+                placeholder="+91 98765 43210"
+                value={deliveryPhone}
+                onChange={(e) => setDeliveryPhone(e.target.value)}
+              />
+            </div>
           </Card>
         </section>
 
@@ -257,7 +359,7 @@ export default function CheckoutPage() {
               <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg">
                 <MapPin className="h-8 w-8 mx-auto text-muted-foreground/50 mb-3" />
                 <p className="text-sm max-w-[250px] mx-auto">
-                  Detect your location to calculate dynamic pricing and assign the nearest vendor.
+                  Detect your location or click the map to calculate dynamic pricing and assign the nearest vendor.
                 </p>
               </div>
             )}

@@ -37,10 +37,10 @@ export function Hero() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="w-full sm:w-auto gap-2 group" asChild>
-              <Link to="#categories">
+              <a href="#categories">
                 Explore Products
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              </a>
             </Button>
             <Button
               size="lg"

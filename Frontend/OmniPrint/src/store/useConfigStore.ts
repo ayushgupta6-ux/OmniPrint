@@ -5,12 +5,15 @@ interface ConfigState {
   designPath: "upload" | "ai" | "consult" | null;
   needsInstallation: boolean;
   uploadedFile: File | null;
+  designUrl: string | null;
+  
   
   // Actions
   setSelection: (label: string, option: string) => void;
   setDesignPath: (path: "upload" | "ai" | "consult" | null) => void;
   setNeedsInstallation: (needs: boolean) => void;
   setUploadedFile: (file: File | null) => void;
+  setDesignUrl: (url: string | null) => void;
   resetConfig: () => void;
 }
 
@@ -19,6 +22,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
   designPath: null,
   needsInstallation: false,
   uploadedFile: null,
+  designUrl: null,
 
   setSelection: (label, option) =>
     set((state) => ({ selections: { ...state.selections, [label]: option } })),
@@ -26,7 +30,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
   setDesignPath: (path) => set({ designPath: path }),
   setNeedsInstallation: (needs) => set({ needsInstallation: needs }),
   setUploadedFile: (file) => set({ uploadedFile: file }),
-  
+  setDesignUrl: (url) => set({ designUrl: url }),
   resetConfig: () => set({
     selections: {},
     designPath: null,

@@ -12,9 +12,35 @@ export const useAuth = () => {
     mutationFn: async (credentials) => {
       return api.auth.login(credentials);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setToken(data.token); // Save token to Zustand & LocalStorage
-      navigate('/'); // Redirect to Home
+      try {
+        // 1. Decode token to check role and ID
+        const payload = JSON.parse(atob(data.token.split('.')[1]));
+
+        // 2. SMART ROUTING LOGIC
+        if (payload.role === 'VENDOR') {
+           try {
+               // Check if this vendor has created an agency profile yet
+               const profile = await api.vendor.getVendorProfile(payload.userId); 
+               
+               if (profile && profile.agencyName) {
+                   navigate('/vendor/dashboard'); // Already onboarded!
+               } else {
+                   navigate('/vendor/onboarding'); // Needs setup!
+               }
+           } catch (profileError) {
+               // If the API throws an error (like a 404 Not Found), it means no profile exists
+               navigate('/vendor/onboarding');
+           }
+        } else {
+            // Normal user routing
+            navigate('/'); 
+        }
+      } catch (tokenError) {
+        console.error("Failed to parse token:", tokenError);
+        navigate('/'); // Fallback routing if token decoding fails
+      }
     },
   });
 

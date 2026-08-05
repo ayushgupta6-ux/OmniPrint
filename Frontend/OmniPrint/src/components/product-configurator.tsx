@@ -47,7 +47,7 @@ export function ProductConfigurator({ product, images }: ProductConfiguratorProp
 
         <ProductFilters filters={product.filters} />
         
-        <DesignPathSelector />
+        <DesignPathSelector  productName={product.name} />
 
         {/* Installation toggle */}
         <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 border border-border">
@@ -100,7 +100,7 @@ export function ProductConfigurator({ product, images }: ProductConfiguratorProp
                   quantity: quantity,
                   selections: selections,
                   needsInstallation: needsInstallation,
-                  designPath: designPath,
+                 designPath: useConfigStore.getState().designUrl,
                 },
               });
             }}

@@ -193,6 +193,15 @@ export const api = {
 
   vendor: {
     // --- CHANGED: Now accepts a payload object and makes a POST request ---
+    getVendorProfile: async (vendorId: number) => {
+    // Old way: return fetch(`/api/vendors/profile/${vendorId}`, ...)
+    // New way (since the gateway sends the token/header automatically):
+    const response = await fetch(`${API_BASE_URL}/vendors/profile`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('jwt_token')}` }
+    });
+    if (!response.ok) throw new Error("Profile not found");
+    return response.json();
+  },
     getNearestVendorQuote: async (payload: NearestVendorQuotePayload): Promise<any> =>
       axiosInstance.post('/vendors/quote', payload, {
         headers: getAuthHeaders(),

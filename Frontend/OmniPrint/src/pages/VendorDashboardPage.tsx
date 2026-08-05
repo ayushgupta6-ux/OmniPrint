@@ -8,7 +8,13 @@ import {
     Loader2,
     CheckCircle2,
     Clock,
-    Truck
+    Truck,
+    Wrench,
+    Image as ImageIcon,
+    ExternalLink,
+    ChevronRight,
+    ChevronLeft,  
+    Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,6 +24,8 @@ import { api } from '@/api/api';
 export default function VendorDashboardPage() {
     const [activeTab, setActiveTab] = useState<"orders" | "catalog">("orders");
     const [vendorId, setVendorId] = useState<number | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ordersPerPage = 5; // You can change how many orders show per page
 
     const [orders, setOrders] = useState<any[]>([]);
     const [catalog, setCatalog] = useState<any[]>([]);
@@ -79,6 +87,15 @@ export default function VendorDashboardPage() {
         }
     };
 
+    // 1. Sort orders so the newest (highest ID) is at the top
+    const sortedOrders = [...orders].sort((a, b) => b.id - a.id);
+    
+    // 2. Calculate pagination
+    const totalPages = Math.ceil(sortedOrders.length / ordersPerPage);
+    const startIndex = (currentPage - 1) * ordersPerPage;
+    // 3. Get only the orders for the current page
+    const currentOrders = sortedOrders.slice(startIndex, startIndex + ordersPerPage);
+
     return (
         <main className="pt-24 pb-16 px-4 max-w-6xl mx-auto min-h-[calc(100vh-80px)]">
 
@@ -128,56 +145,147 @@ export default function VendorDashboardPage() {
                                     <p className="text-muted-foreground">When customers nearby place an order, it will appear here.</p>
                                 </Card>
                             ) : (
-                                <div className="grid gap-4">
-                                    {orders.map((order) => (
-                                        <Card key={order.id} className="p-6 border-border shadow-sm flex flex-col md:flex-row justify-between gap-6">
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                                                        Order #{order.id}
-                                                    </span>
-                                                    <span className="flex items-center gap-1.5 text-sm font-medium capitalize bg-secondary px-2.5 py-1 rounded-md">
-                                                        {getStatusIcon(order.status)} {order.status.replace(/_/g, ' ')}
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-semibold text-lg">{order.productId}</h3>
-                                                    <p className="text-sm text-muted-foreground mt-1">Quantity: <span className="font-medium text-foreground">{order.quantity} Units</span></p>
-                                                </div>
-                                                <div className="text-sm p-3 bg-secondary/50 rounded-lg border border-border">
-                                                    <span className="font-semibold block mb-1">Delivery Address:</span>
-                                                    {order.deliveryAddress}
-                                                </div>
-                                            </div>
+                               <div className="space-y-6">
+    <div className="grid gap-4">
+        {/* Map over currentOrders instead of orders */}
+        {currentOrders.map((order) => (
+            <Card key={order.id} className="p-6 border-border shadow-sm flex flex-col md:flex-row justify-between gap-6">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                        <span className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
+                            Order #{order.id}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-sm font-medium capitalize bg-secondary px-2.5 py-1 rounded-md">
+                            {getStatusIcon(order.status)} {order.status.replace(/_/g, ' ')}
+                        </span>
+                    </div>
+               <div>
+    <h3 className="font-semibold text-lg">{order.productId}</h3>
+    <p className="text-sm text-muted-foreground mt-1 mb-3">Quantity: <span className="font-medium text-foreground">{order.quantity} Units</span></p>
+    
+    {/* NEW: Render Selected Filters (Material, Size, etc.) */}
+    {order.selectedFilters && Object.keys(order.selectedFilters).length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+            {Object.entries(order.selectedFilters).map(([key, value]) => (
+                <span key={key} className="text-xs px-2 py-1 bg-background border rounded-md">
+                    <span className="text-muted-foreground mr-1">{key}:</span> {value as string}
+                </span>
+            ))}
+        </div>
+    )}
 
-                                            <div className="flex flex-col justify-between items-start md:items-end gap-4 min-w-[200px]">
-                                                <div className="text-left md:text-right w-full">
-                                                    <p className="text-sm text-muted-foreground">Total Revenue</p>
-                                                    <p className="text-2xl font-bold text-primary">₹{order.totalAmount}</p>
-                                                </div>
+    {/* NEW: Render Installation Requirement */}
+    {order.needsInstallation && (
+        <div className="mb-3">
+            <span className="text-xs px-2 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/20 rounded-md flex items-center gap-1 w-fit">
+                <Wrench className="h-3 w-3" /> Customer Requested Installation
+            </span>
+        </div>
+    )}
 
-                                                {/* Status Update Actions */}
-                                                <div className="w-full">
-                                                    {order.status === 'PLACED' && (
-                                                        <Button className="w-full" onClick={() => handleUpdateStatus(order.id, 'MANUFACTURING')}>
-                                                            Start Manufacturing
-                                                        </Button>
-                                                    )}
-                                                    {order.status === 'MANUFACTURING' && (
-                                                        <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => handleUpdateStatus(order.id, 'READY_FOR_DELIVERY')}>
-                                                            Ready for Delivery
-                                                        </Button>
-                                                    )}
-                                                    {order.status === 'READY_FOR_DELIVERY' && (
-                                                        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(order.id, 'DELIVERED')}>
-                                                            Mark as Delivered
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
+    {/* NEW: Design File Link */}
+    {order.designPath && order.designPath !== "consult" && (
+        <div className="mb-4">
+            <Button variant="outline" size="sm" className="gap-2" asChild>
+                <a href={order.designPath} target="_blank" rel="noopener noreferrer">
+                    <ImageIcon className="h-4 w-4" /> View Customer Design <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+            </Button>
+        </div>
+    )}
+    {order.designPath === "consult" && (
+        <div className="mb-4">
+            <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
+                * Customer requested design consultation
+            </span>
+        </div>
+    )}
+</div>
+
+ 
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {/* --- NEW: Phone Number Display --- */}
+                        {/* <div className="p-3 bg-secondary/50 rounded-lg border border-border">
+                            <span className="font-semibold flex items-center gap-1 mb-1">
+                                <Phone className="h-3 w-3" /> Customer Contact:
+                            </span>
+                            {order.customerPhone ? (
+                                <a href={`tel:${order.customerPhone}`} className="text-primary hover:underline font-medium">
+                                    {order.customerPhone}
+                                </a>
+                            ) : (
+                                <span className="text-muted-foreground italic">Not provided</span>
+                            )}
+                        </div> */}
+
+                        {/* Existing Address Display */}
+                        <div className="p-3 bg-secondary/50 rounded-lg border border-border">
+                            <span className="font-semibold block mb-1">Delivery Address:</span>
+                            {order.deliveryAddress}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col justify-between items-start md:items-end gap-4 min-w-[200px]">
+                    <div className="text-left md:text-right w-full">
+                        <p className="text-sm text-muted-foreground">Total Revenue</p>
+                        <p className="text-2xl font-bold text-primary">₹{order.totalAmount}</p>
+                    </div>
+
+                    {/* Status Update Actions (Unchanged) */}
+                    <div className="w-full">
+                        {order.status === 'PLACED' && (
+                            <Button className="w-full" onClick={() => handleUpdateStatus(order.id, 'MANUFACTURING')}>
+                                Start Manufacturing
+                            </Button>
+                        )}
+                        {order.status === 'MANUFACTURING' && (
+                            <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => handleUpdateStatus(order.id, 'READY_FOR_DELIVERY')}>
+                                Ready for Delivery
+                            </Button>
+                        )}
+                        {order.status === 'READY_FOR_DELIVERY' && (
+                            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(order.id, 'DELIVERED')}>
+                                Mark as Delivered
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            </Card>
+        ))}
+    </div>
+
+    {/* --- NEW: Pagination Controls --- */}
+    {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(startIndex + ordersPerPage, sortedOrders.length)} of {sortedOrders.length} orders
+            </p>
+            <div className="flex items-center gap-2">
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                </Button>
+                <span className="text-sm font-medium px-2">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                >
+                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+            </div>
+        </div>
+    )}
+</div>
                             )}
                         </div>
                     )}
