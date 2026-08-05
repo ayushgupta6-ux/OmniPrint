@@ -22,7 +22,7 @@ import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import CheckoutPage from './pages/CheckoutPage';
 import VendorAddProductPage from './pages/VendorAddProductPage';
-
+import VendorEditProductPage from './pages/VendorEditProductPage';
 
 const queryClient = new QueryClient();
 
@@ -89,6 +89,10 @@ const router = createBrowserRouter([
           {
             path: "vendor/catalog/add",
             element: <VendorAddProductPage />
+          },
+          {
+            path: "vendor/catalog/edit/:productId", // <-- NEW ROUTE
+            element: <VendorEditProductPage />
           },
         ]
       },

@@ -43,9 +43,33 @@ public class VendorProduct {
     @Column(name = "vendor_price", nullable = false)
     private BigDecimal vendorPrice;
 
+    // ==========================================
+    // --- NEW: Installation Charges ---
+    // ==========================================
+    @Column(name = "offers_installation")
+    private Boolean offersInstallation;
+
+    @Column(name = "installation_fee", precision = 10, scale = 2)
+    private BigDecimal installationFee;
+
+
+    // ==========================================
+    // --- LISTS & MAPPINGS ---
+    // ==========================================
+
     @OneToMany(mappedBy = "vendorProduct", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<VendorDiscountTier> discountTiers = new ArrayList<>();
+
+    // --- NEW: Filter Option Surcharges ---
+    @OneToMany(mappedBy = "vendorProduct", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<VendorFilterPricing> filterPricings = new ArrayList<>();
+
+
+    // ==========================================
+    // --- TIMESTAMPS ---
+    // ==========================================
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

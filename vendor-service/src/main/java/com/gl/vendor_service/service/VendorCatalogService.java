@@ -2,6 +2,7 @@ package com.gl.vendor_service.service;
 
 import com.gl.vendor_service.dto.VendorProductRequestDTO;
 import com.gl.vendor_service.entity.VendorDiscountTier;
+import com.gl.vendor_service.entity.VendorFilterPricing; // Make sure to import this!
 import com.gl.vendor_service.entity.VendorProduct;
 import com.gl.vendor_service.entity.VendorProfile;
 import com.gl.vendor_service.repository.VendorProductRepository;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class VendorCatalogService {
@@ -28,8 +28,6 @@ public class VendorCatalogService {
         return productRepository.findByVendor_VendorId(vendorId);
     }
 
-    // Inside VendorCatalogService.java
-
     @Transactional
     public VendorProduct addProductToCatalog(Long vendorId, VendorProductRequestDTO request) {
         VendorProfile vendor = profileRepository.findById(vendorId)
@@ -43,6 +41,9 @@ public class VendorCatalogService {
                 .vendor(vendor)
                 .productId(request.getProductId())
                 .vendorPrice(request.getVendorPrice())
+                // --- NEW: Map Installation Fields ---
+                .offersInstallation(request.getOffersInstallation() != null ? request.getOffersInstallation() : false)
+                .installationFee(request.getInstallationFee())
                 .build();
 
         // Map the discount tiers
@@ -58,6 +59,19 @@ public class VendorCatalogService {
             newProduct.getDiscountTiers().addAll(tiers);
         }
 
+        // --- NEW: Map the filter pricings ---
+        if (request.getFilterPricings() != null) {
+            List<VendorFilterPricing> filterPricings = request.getFilterPricings().stream().map(f ->
+                    VendorFilterPricing.builder()
+                            .vendorProduct(newProduct)
+                            .filterLabel(f.getFilterLabel())
+                            .optionName(f.getOptionName())
+                            .additionalPrice(f.getAdditionalPrice())
+                            .build()
+            ).toList();
+            newProduct.getFilterPricings().addAll(filterPricings);
+        }
+
         return productRepository.save(newProduct);
     }
 
@@ -67,6 +81,9 @@ public class VendorCatalogService {
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         existingProduct.setVendorPrice(request.getVendorPrice());
+        // --- NEW: Update Installation Fields ---
+        existingProduct.setOffersInstallation(request.getOffersInstallation() != null ? request.getOffersInstallation() : false);
+        existingProduct.setInstallationFee(request.getInstallationFee());
 
         // Update tiers: Clear old ones and add new ones
         existingProduct.getDiscountTiers().clear();
@@ -82,8 +99,23 @@ public class VendorCatalogService {
             existingProduct.getDiscountTiers().addAll(tiers);
         }
 
+        // --- NEW: Update filter pricings ---
+        existingProduct.getFilterPricings().clear();
+        if (request.getFilterPricings() != null) {
+            List<VendorFilterPricing> filterPricings = request.getFilterPricings().stream().map(f ->
+                    VendorFilterPricing.builder()
+                            .vendorProduct(existingProduct)
+                            .filterLabel(f.getFilterLabel())
+                            .optionName(f.getOptionName())
+                            .additionalPrice(f.getAdditionalPrice())
+                            .build()
+            ).toList();
+            existingProduct.getFilterPricings().addAll(filterPricings);
+        }
+
         return productRepository.save(existingProduct);
     }
+
     // 4. Remove a product from the vendor's catalog
     @Transactional
     public void removeProductFromCatalog(Long vendorId, String productId) {

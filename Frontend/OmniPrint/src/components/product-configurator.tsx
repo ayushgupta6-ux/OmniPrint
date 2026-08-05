@@ -425,7 +425,9 @@ export function ProductConfigurator({
                 state: { 
                   productId: product.id, 
                   quantity: quantity,
-                  selections: selections 
+                  selections: selections ,
+                  needsInstallation: needsInstallation, // <-- NEW: Pass installation flag
+                  designPath: designPath
                 } 
               });
             }} 
