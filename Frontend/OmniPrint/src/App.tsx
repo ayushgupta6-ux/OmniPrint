@@ -12,17 +12,18 @@ import ContactPage from '@/pages/ContactPage';
 import ProductPage from '@/pages/ProductPage';
 import RootLayout from '@/RootLayout';
 import CategoryPage from '@/pages/CategoryPage';
-import AdminAddProductPage from './pages/AdminAddProductPage';
-import AdminRoute from './components/AdminRoute';
-import AdminProductsListPage from './pages/AdminProductsListPage';
-import AdminEditProductPage from './pages/AdminEditProductPage';
-import VendorRoute from './components/VendorRoute';
-import VendorDashboardPage from './pages/VendorDashboardPage';
-import VendorOnboardingPage from './pages/VendorOnboardingPage';
-import ProtectedRoute from './components/ProtectedRoute';
-import CheckoutPage from './pages/CheckoutPage';
-import VendorAddProductPage from './pages/VendorAddProductPage';
-import VendorEditProductPage from './pages/VendorEditProductPage';
+import AdminAddProductPage from '@/pages/AdminAddProductPage';
+import AdminRoute from '@/components/AdminRoute';
+import AdminProductsListPage from '@/pages/AdminProductsListPage';
+import AdminEditProductPage from '@/pages/AdminEditProductPage';
+import VendorRoute from '@/components/VendorRoute';
+import VendorDashboardPage from '@/pages/VendorDashboardPage';
+import VendorOnboardingPage from '@/pages/VendorOnboardingPage';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import CheckoutPage from '@/pages/CheckoutPage';
+import VendorAddProductPage from '@/pages/VendorAddProductPage';
+import VendorEditProductPage from '@/pages/VendorEditProductPage';
+import ClientOrdersPage from './pages/ClientOrdersPage';
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,10 @@ const router = createBrowserRouter([
           {
             path: "checkout",
             element: <CheckoutPage />
+          },
+          {
+            path: "orders", // <-- NEW ROUTE
+            element: <ClientOrdersPage />
           }
         ]
       },

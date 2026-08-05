@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { api } from '@/api/api';
 
 export default function VendorOnboardingPage() {
   const navigate = useNavigate();
@@ -44,24 +45,13 @@ export default function VendorOnboardingPage() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("jwt_token");
-      
-      const response = await fetch("http://localhost:8080/api/vendors/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          agencyName,
-          address,
-          latitude: coordinates.lat,
-          longitude: coordinates.lng,
-        }),
+      await api.vendor.createProfile({
+        agencyName,
+        address,
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
       });
 
-      if (!response.ok) throw new Error("Failed to create profile");
-      
       alert("Profile created successfully!");
       navigate("/vendor/dashboard"); // Redirect to their future dashboard
     } catch (error) {

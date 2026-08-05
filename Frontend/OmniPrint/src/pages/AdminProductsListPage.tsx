@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { Edit, Trash2, Plus, Loader2 } from "lucide-react";
 import { useAllProducts } from "@/hooks/useCatalog";
 import { Button } from "@/components/ui/button";
+import { api } from '@/api/api';
 
 export default function AdminProductsListPage() {
   const { data: products, isLoading, refetch } = useAllProducts();
@@ -10,15 +11,7 @@ export default function AdminProductsListPage() {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      const token = localStorage.getItem("jwt_token");
-      const response = await fetch(`http://localhost:8080/api/admin/products/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error("Failed to delete");
+      await api.admin.deleteProduct(id);
       alert("Product deleted!");
       refetch(); // Refresh the list
     } catch (error) {

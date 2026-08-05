@@ -40,6 +40,12 @@ public class GatewayConfig {
 
                 // --- 3. NEW VENDOR Route ---
                 .and(route("vendor-service-nearest")
+                        .route(req -> req.path().startsWith("/api/vendors/quote"), http())
+                        .filter(lb("VENDOR-SERVICE"))
+                        .filter(jwtFilter.applyFilter()) // Standard filter: Any logged-in user can access this
+                        .build())
+
+                .and(route("vendor-service-nearest")
                         .route(req -> req.path().startsWith("/api/vendors/nearest"), http())
                         .filter(lb("VENDOR-SERVICE"))
                         .filter(jwtFilter.applyFilter()) // Standard filter: Any logged-in user can access this

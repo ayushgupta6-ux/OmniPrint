@@ -2,10 +2,8 @@ import { useState } from "react";
 import { Plus, Trash2, UploadCloud, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { api } from '@/api/api';
 
-// Update this to match your Cloudinary credentials
-const CLOUDINARY_CLOUD_NAME = "du91zlnae";
-const CLOUDINARY_UPLOAD_PRESET = "product_uploads"; // The unsigned preset you created
 
 export default function AdminAddProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,22 +40,7 @@ export default function AdminAddProductPage() {
  
   // --- Image Upload to Cloudinary ---
   const uploadImagesToCloudinary = async (): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const file of imageFiles) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!res.ok) throw new Error("Failed to upload an image to Cloudinary");
-      const data = await res.json();
-      urls.push(data.secure_url);
-    }
-    return urls;
+    return api.cloudinary.uploadImages(imageFiles);
   };
 
   // --- Form Submission ---
@@ -89,18 +72,7 @@ export default function AdminAddProductPage() {
       };
 
       // 3. Send to API Gateway (Admin Route)
-      const token = localStorage.getItem("jwt_token"); // Get JWT token
-      
-      const response = await fetch("http://localhost:8080/api/admin/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Failed to save product to database");
+      await api.admin.createProduct(payload);
 
       alert("Product successfully created!");
       window.location.reload(); // Reset form

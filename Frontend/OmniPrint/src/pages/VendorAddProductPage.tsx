@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useAllProducts } from "@/hooks/useCatalog";
+import { api } from '@/api/api';
 
 export default function VendorAddProductPage() {
   const navigate = useNavigate();
@@ -85,7 +86,6 @@ export default function VendorAddProductPage() {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("jwt_token");
       const payload = {
         productId: selectedProduct.id,
         vendorPrice: Number(vendorPrice),
@@ -99,13 +99,7 @@ export default function VendorAddProductPage() {
         filterPricings,
       };
 
-      const response = await fetch(`http://localhost:8080/api/vendors/${vendorId}/products`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Failed to save product pricing");
+      await api.vendor.addVendorProduct(vendorId, payload);
       alert("Product pricing saved successfully!");
       navigate("/vendor/dashboard");
     } catch (error: any) {

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useAllProducts } from "@/hooks/useCatalog";
+import { api } from '@/api/api';
 
 export default function VendorEditProductPage() {
   const { productId } = useParams();
@@ -43,11 +44,7 @@ export default function VendorEditProductPage() {
 
     const fetchVendorProduct = async () => {
       try {
-        const token = localStorage.getItem("jwt_token");
-        const res = await fetch(`http://localhost:8080/api/vendors/${vendorId}/products`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const catalog = await res.json();
+        const catalog = await api.vendor.getVendorProducts(vendorId);
         
         const currentItem = catalog.find((c: any) => c.productId === productId);
         if (currentItem) {
@@ -108,7 +105,7 @@ export default function VendorEditProductPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem("jwt_token");
+      if (!vendorId) throw new Error("Vendor ID is required");
       const payload = {
         productId: productId,
         vendorPrice: Number(vendorPrice),
@@ -122,13 +119,7 @@ export default function VendorEditProductPage() {
         filterPricings,
       };
 
-      const response = await fetch(`http://localhost:8080/api/vendors/${vendorId}/products/${productId}`, {
-        method: "PUT", // Updating instead of posting
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Failed to update product pricing");
+      await api.vendor.updateVendorProduct(vendorId, productId!, payload);
       alert("Product pricing updated successfully!");
       navigate("/vendor/dashboard");
     } catch (error: any) {

@@ -1,21 +1,16 @@
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
 import { useAuthStore } from '@/store/authStore';
 import { useNavigate } from 'react-router';
-
-const API_URL = 'http://localhost:8080/api/v1/auth';
-
-
+import { api } from '@/api/api';
 
 export const useAuth = () => {
   const setToken = useAuthStore((state: any) => state.setToken);
   const navigate = useNavigate();
 
   // Login Mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await axios.post(`${API_URL}/login`, credentials);
-      return response.data;
+  const loginMutation = useMutation<{ token: string }, unknown, { email: string; password: string }>({
+    mutationFn: async (credentials) => {
+      return api.auth.login(credentials);
     },
     onSuccess: (data) => {
       setToken(data.token); // Save token to Zustand & LocalStorage
@@ -26,29 +21,20 @@ export const useAuth = () => {
   // Register Mutation
   const registerMutation = useMutation({
     mutationFn: async (userData: user) => {
-      // Mapping frontend schema to backend DTO
-      const payload = {
-        name: userData.name,
-        email: userData.email,
-        number: userData.phoneNumber, // Backend expects 'number'
-        password: userData.password,
-        role:userData.role 
-      };
-      const response = await axios.post(`${API_URL}/register`, payload);
-      return response.data;
+      return api.auth.register(userData);
     },
     onSuccess: () => {
       navigate('/login'); // Redirect to login on success
-    }
+    },
   });
 
   return { loginMutation, registerMutation };
 };
 
-interface user{
-    name: string,
-    email: string,
-    phoneNumber: string,
-    password: string,
-    role: string
+interface user {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  role: string;
 }

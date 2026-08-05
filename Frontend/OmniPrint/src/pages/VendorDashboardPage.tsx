@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { api } from '@/api/api';
 
 export default function VendorDashboardPage() {
     const [activeTab, setActiveTab] = useState<"orders" | "catalog">("orders");
@@ -41,16 +42,12 @@ export default function VendorDashboardPage() {
 
         const fetchData = async () => {
             setIsLoading(true);
-            const token = localStorage.getItem("jwt_token");
-            const headers = { "Authorization": `Bearer ${token}` };
 
             try {
                 if (activeTab === "orders") {
-                    const res = await fetch("http://localhost:8080/api/orders/vendor", { headers });
-                    if (res.ok) setOrders(await res.json());
+                    setOrders(await api.vendor.getVendorOrders());
                 } else {
-                    const res = await fetch(`http://localhost:8080/api/vendors/${vendorId}/products`, { headers });
-                    if (res.ok) setCatalog(await res.json());
+                    setCatalog(await api.vendor.getVendorProducts(vendorId));
                 }
             } catch (error) {
                 console.error("Failed to fetch data:", error);
@@ -65,15 +62,7 @@ export default function VendorDashboardPage() {
     // 3. Update Order Status
     const handleUpdateStatus = async (orderId: number, newStatus: string) => {
         try {
-            const token = localStorage.getItem("jwt_token");
-            const res = await fetch(`http://localhost:8080/api/orders/${orderId}/status?status=${newStatus}`, {
-                method: "PATCH",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error("Failed to update status");
-
-            // Update local state to reflect change instantly
+            await api.vendor.updateOrderStatus(orderId, newStatus);
             setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
         } catch (error) {
             alert("Failed to update order status.");

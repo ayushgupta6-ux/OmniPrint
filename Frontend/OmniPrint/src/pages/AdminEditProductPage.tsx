@@ -3,11 +3,8 @@ import { useParams, useNavigate } from "react-router";
 import { Plus, Trash2, UploadCloud, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { api } from '@/api/api';
  
-// Update this to match your Cloudinary credentials
-const CLOUDINARY_CLOUD_NAME = "du91zlnae";
-const CLOUDINARY_UPLOAD_PRESET = "product_uploads"; 
-
 export default function AdminEditProductPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -37,13 +34,7 @@ export default function AdminEditProductPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        // Use your public endpoint (or admin endpoint) to fetch the product
-        // Note: If you only have getBySlug, and id == slug, this will work. 
-        // Adjust the URL if your GET endpoint path is different.
-        const response = await fetch(`http://localhost:8080/api/products/${id}`);
-        if (!response.ok) throw new Error("Product not found");
-        
-        const data = await response.json();
+        const data = await api.products.getById(id!);
         
         setBasicInfo({
           id: data.id,
@@ -88,23 +79,7 @@ export default function AdminEditProductPage() {
   // --- Image Upload to Cloudinary ---
   const uploadNewImagesToCloudinary = async (): Promise<string[]> => {
     if (newImageFiles.length === 0) return [];
-    
-    const urls: string[] = [];
-    for (const file of newImageFiles) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!res.ok) throw new Error("Failed to upload an image to Cloudinary");
-      const data = await res.json();
-      urls.push(data.secure_url);
-    }
-    return urls;
+    return api.cloudinary.uploadImages(newImageFiles);
   };
 
   // --- Form Submission (PUT Request) ---
@@ -135,18 +110,7 @@ export default function AdminEditProductPage() {
      
       };
 
-      // 4. Send PUT request to API Gateway
-      const token = localStorage.getItem("jwt_token");
-      const response = await fetch(`http://localhost:8080/api/admin/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error("Failed to update product");
+      await api.admin.updateProduct(id!, payload);
 
       alert("Product successfully updated!");
       navigate("/admin/products"); // Go back to list

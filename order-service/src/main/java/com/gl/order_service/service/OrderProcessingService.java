@@ -3,6 +3,8 @@ package com.gl.order_service.service;
 import com.gl.order_service.client.VendorServiceClient;
 import com.gl.order_service.dto.NearestVendorResponse;
 import com.gl.order_service.dto.OrderRequestDTO;
+import com.gl.order_service.dto.QuoteRequestDTO;
+import com.gl.order_service.dto.QuoteResponseDTO;
 import com.gl.order_service.entity.Order;
 import com.gl.order_service.entity.OrderStatus;
 import com.gl.order_service.repository.OrderRepository;
@@ -25,35 +27,44 @@ public class OrderProcessingService {
 
     @Transactional
     public Order placeOrder(Long clientId, OrderRequestDTO request) {
-        NearestVendorResponse routingData;
+        QuoteResponseDTO routingData;
 
         try {
-            // 1. Call Vendor Service via Eureka/Feign
-            routingData = vendorClient.getNearestVendor(
-                    request.getProductId(),
-                    request.getDeliveryLat(),
-                    request.getDeliveryLng(),
-                    request.getQuantity()
-            );
+            // 1. Build the Quote Request with all the new filters and flags
+            QuoteRequestDTO quoteRequest = QuoteRequestDTO.builder()
+                    .productId(request.getProductId())
+                    .quantity(request.getQuantity())
+                    .lat(request.getDeliveryLat())
+                    .lng(request.getDeliveryLng())
+                    .selectedFilters(request.getSelectedFilters())
+                    .needsInstallation(request.getNeedsInstallation())
+                    .build();
+
+            // 2. Call Vendor Service via Feign (POST /quote)
+            routingData = vendorClient.getVendorQuote(quoteRequest);
+
         } catch (FeignException e) {
-            // Handle cases where the Vendor Service returns 404 (No vendors found) or 500
-            throw new RuntimeException("Could not process order: No nearby vendors available for this product.");
+            throw new RuntimeException("Could not process order: No nearby vendors available for this configuration.");
         }
 
-        // 2. Build the order with the securely calculated vendor data
+        // 3. Build the order with the securely calculated vendor data
         Order newOrder = Order.builder()
                 .clientId(clientId)
-                .vendorId(routingData.getVendorId()) // Automatically assigned to the nearest!
+                .vendorId(routingData.getVendorId())
                 .productId(request.getProductId())
                 .quantity(request.getQuantity())
-                .totalAmount(routingData.getTotalAmount()) // Includes volume discounts
+                .totalAmount(routingData.getTotalAmount()) // SECURE: Calculated by backend!
                 .deliveryLat(request.getDeliveryLat())
                 .deliveryLng(request.getDeliveryLng())
                 .deliveryAddress(request.getDeliveryAddress())
                 .status(OrderStatus.PLACED)
+                // --- NEW: Map the user's design choices ---
+                .selectedFilters(request.getSelectedFilters())
+                .needsInstallation(request.getNeedsInstallation())
+                .designPath(request.getDesignPath())
                 .build();
 
-        // 3. Save and return
+        // 4. Save and return
         return orderRepository.save(newOrder);
     }
 
