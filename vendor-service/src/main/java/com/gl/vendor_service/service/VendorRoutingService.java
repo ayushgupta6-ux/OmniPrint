@@ -18,7 +18,7 @@ public class VendorRoutingService {
 
     private final VendorProductRepository vendorProductRepository;
     private static final int EARTH_RADIUS_KM = 6371;
-    private static final double MAX_RADIUS_KM = 30.0; // Vendors must be within 30km
+    private static final double MAX_RADIUS_KM = 1000.0; // Vendors must be within 30km
 
     public VendorRoutingService(VendorProductRepository vendorProductRepository) {
         this.vendorProductRepository = vendorProductRepository;

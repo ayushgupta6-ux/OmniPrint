@@ -9,85 +9,62 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Service
 public class GeminiAiService {
 
-    @Value("${hf.token}")
-    private String hfToken;
+    @Value("${gemini.api.key}")
+    private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String generateProductDesign(String userPrompt, String productConfig) {
         try {
-            System.out.println("STEP 1: Enhancing prompt with Hugging Face (Qwen 2.5)...");
+            System.out.println("STEP 1: Enhancing prompt with Gemini Text...");
             String enhancedPrompt = enhancePrompt(userPrompt, productConfig);
             System.out.println("Enhanced Prompt: " + enhancedPrompt);
 
-            System.out.println("STEP 2: Generating image via Hugging Face (FLUX.1)...");
+            System.out.println("STEP 2: Generating image via Pollinations (Free Fallback)...");
             return generateImage(enhancedPrompt);
         } catch (Exception e) {
             throw new RuntimeException("AI Generation Failed: " + e.getMessage());
         }
     }
+
     private String enhancePrompt(String userPrompt, String productConfig) throws Exception {
-        String url = "https://router.huggingface.co/hf-inference/v1/chat/completions";
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
         String systemInstruction = "You are a professional print designer. The user wants a design for: " + productConfig +
                 ". Take their simple prompt and expand it into a highly detailed, comma-separated image generation prompt. " +
                 "Focus on lighting, style, background, and print quality. Do not output conversational text, ONLY the prompt.";
 
-        // FIX: Switched to Mistral-7B which is permanently supported on the Hugging Face free tier!
+        String fullPrompt = systemInstruction + "\n\nUser Prompt: " + userPrompt;
+
         String requestBody = """
             {
-              "model": "mistralai/Mistral-7B-Instruct-v0.3",
-              "messages": [
-                {
-                  "role": "system",
-                  "content": "%s"
-                },
-                {
-                  "role": "user",
-                  "content": "%s"
-                }
-              ],
-              "max_tokens": 200,
-              "temperature": 0.7
+              "contents": [{"parts": [{"text": "%s"}]}]
             }
-            """.formatted(
-                systemInstruction.replace("\"", "\\\"").replace("\n", " "),
-                userPrompt.replace("\"", "\\\"").replace("\n", " ")
-        );
+            """.formatted(fullPrompt.replace("\"", "\\\"").replace("\n", " "));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(hfToken);
 
         String response = restTemplate.postForObject(url, new HttpEntity<>(requestBody, headers), String.class);
         JsonNode rootNode = objectMapper.readTree(response);
 
-        return rootNode.path("choices").get(0).path("message").path("content").asText().trim();
+        return rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
     }
+
     private String generateImage(String enhancedPrompt) throws Exception {
-        // Calling FLUX.1-schnell model on Hugging Face
-        String url = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell";
+        // We URL-encode the prompt so it is safe to put in a URL
+        String encodedPrompt = URLEncoder.encode(enhancedPrompt, StandardCharsets.UTF_8.toString());
 
-        String requestBody = """
-            {
-              "inputs": "%s"
-            }
-            """.formatted(enhancedPrompt.replace("\"", "\\\"").replace("\n", " "));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(hfToken); // Using your Hugging Face Token!
-
-        // Hugging Face returns the raw image byte array directly
-        byte[] imageBytes = restTemplate.postForObject(url, new HttpEntity<>(requestBody, headers), byte[].class);
-
-        // Return Base64 data URL for your React frontend
-        return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes);
+        // Instantly return the URL to the frontend!
+        // The browser will download and render the image natively, saving massive backend memory.
+        return "https://image.pollinations.ai/prompt/" + encodedPrompt + "?width=800&height=800&nologo=true";
     }
 }

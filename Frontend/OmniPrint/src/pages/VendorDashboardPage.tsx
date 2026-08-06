@@ -184,7 +184,7 @@ export default function VendorDashboardPage() {
     )}
 
     {/* NEW: Design File Link */}
-    {order.designPath && order.designPath !== "consult" && (
+    {order.designPath && (order.designPath !== "consult" && order.designPath !== "consultation-requested")  && (
         <div className="mb-4">
             <Button variant="outline" size="sm" className="gap-2" asChild>
                 <a href={order.designPath} target="_blank" rel="noopener noreferrer">
@@ -193,7 +193,7 @@ export default function VendorDashboardPage() {
             </Button>
         </div>
     )}
-    {order.designPath === "consult" && (
+    {(order.designPath === "consult" || order.designPath === "consultation-requested") && (
         <div className="mb-4">
             <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-md">
                 * Customer requested design consultation

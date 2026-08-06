@@ -50,6 +50,11 @@ public class GatewayConfig {
                         .filter(lb("VENDOR-SERVICE"))
                         .filter(jwtFilter.applyFilter()) // Standard filter: Any logged-in user can access this
                         .build())
+                .and(route("product-service-ai-design-prompt")
+                        .route(req -> req.path().startsWith("/api/design/generate"), http())
+                        .filter(lb("PRODUCT-SERVICE"))
+                        .filter(jwtFilter.applyFilter()) // Standard filter: Any logged-in user can access this
+                        .build())
 
                 .and(route("vendor-service")
                         .route(req -> req.path().startsWith("/api/vendors"), http())
